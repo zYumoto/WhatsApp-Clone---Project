@@ -71,5 +71,39 @@ class WhatsAppController {
 
     }
 
+
+    initEvents(){
+        this.eL.myPhoto.on("click", e=>{
+            
+            this.closeAllLeftPanel();
+            this.el.panelAddContact.show();
+            setTimeout(()=>{
+                this.el.panelEditProfile.addClass("open");
+
+            },300);
+            
+
+    });
+
+        this.eL.btnNewContact.on("click", e=>{
+            
+            this.closeAllLeftPanel();
+            this.el.panelAddContact.show();
+            setTimeout(()=>{
+                    this.el.panelAddContact.addClass("open");
+
+            },300);
         
-}
+
+        });
+
+        this.el.btnClosePanelEditProfile.on("click", e=>{
+
+            this.el.panelEditProfile.removeClass("open");
+        });
+
+        this.el.btnClosePanelAddContact.on("click", e=>{
+
+            this.el.panelAddContact.removeClass("open");
+        });
+    }
