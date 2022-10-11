@@ -1,8 +1,5 @@
 class WhatsAppController {
     constructor(){
-
-        console.log("WhatsAppController OK");
-
         this.elementPrototype();
         this.loadElements();
     }
@@ -178,6 +175,8 @@ class WhatsAppController {
                 "heigth":"calc(100% - 120px)"
             });
 
+            this._camera = new CameraController(this.el.videoCamera);
+
         });
 
         this.el.btnClosePanelCamera.on("click", e=>{
@@ -278,11 +277,35 @@ class WhatsAppController {
                         emoji.classList.forEach(name=>{
                             img.classList.add(name);
                         });
-                        this.el.inputText.appendChild(img);
-                        this.el.inputText.dispatchEvent(new Event ("keyup"));
+
+
+
+
+                            let cursor = window.getSelection();
+
+                            if(!cursor.focusNode || !cursor.focusNode.id == "input-text"){
+                                this.el.inputText.focus();
+                                cursor = window.getSelection();
+                            }
+
+
+                            let range = document.createRange();
+
+                            range = cursor.getRangeAt(0);
+                            range.deleteContents();
+
+                            let frag = document.createDocumentFragment();
+                            frag.appendChild(img);
+                            range.insertNode(frag);
+                            range.setStartAfter(img);
+
+                            this.el.inputText.dispatchEvent(new Event("keyup"));
                     });
                 });
     }   
+
+
+
 
         startRecordMicrophoneTime(){
 
