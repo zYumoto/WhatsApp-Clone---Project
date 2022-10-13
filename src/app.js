@@ -1,1 +1,1 @@
-window.app = new WhatsAppController ();
+window.app = new WhatsAppController();

@@ -1,7 +1,8 @@
 class WhatsAppController {
     constructor(){
-        this.elementPrototype();
+        this.elementsPrototype();
         this.loadElements();
+        this.initEvents();
     }
 
     loadElements(){
@@ -15,7 +16,7 @@ class WhatsAppController {
         });
 
     }
-            elementPrototype(){
+            elementsPrototype(){
 
                 Element.prototype.hide = function(){
                     this.style.display="none";
@@ -80,7 +81,7 @@ class WhatsAppController {
 
 
     initEvents(){
-        this.eL.myPhoto.on("click", e=>{
+        this.el.myPhoto.on("click", e=>{
             
             this.closeAllLeftPanel();
             this.el.panelAddContact.show();
@@ -92,7 +93,7 @@ class WhatsAppController {
 
     });
 
-        this.eL.btnNewContact.on("click", e=>{
+        this.el.btnNewContact.on("click", e=>{
             
             this.closeAllLeftPanel();
             this.el.panelAddContact.show();
@@ -114,7 +115,7 @@ class WhatsAppController {
             this.el.panelAddContact.removeClass("open");
         });
 
-        this.el.PhotoContainerEditProfile.on("click",e=>{
+        this.el.photoContainerEditProfile.on("click",e=>{
             this.el.inputProfilePhoto.click();
         });
 
@@ -129,17 +130,17 @@ class WhatsAppController {
 
         });
 
-        this.el.FormatPanelAddContact.on("submit,",e=>{
+        this.el.formPanelAddContact.on("submit",e=>{
             e.preventDefault();
-            let formData = new FormData(this.el.FormatPanelAddContact);
+            let formData = new FormData(this.el.formPanelAddContact);
 
         });
 
-        this.el.ContactMessagesList.querySelectorAll(".contact-i tem").forEach(item=>{
+        this.el.contactsMessagesList.querySelectorAll(".contact-item").forEach(item=>{
             item.on("click",e=>{
 
-
-                    this,el.home.hide();
+                
+                    this.el.home.hide();
                     this.el.main.css({
                         display:"flex"
                     });
@@ -229,7 +230,7 @@ class WhatsAppController {
 
         });
 
-        this.el.btnFinishlMicrophone.on("click", e=>{
+        this.el.btnFinishMicrophone.on("click", e=>{
             this.closeRecordMicrophone();
         });
         this.el.inputText.on("keypress", e=>{
@@ -314,7 +315,7 @@ class WhatsAppController {
             this._recordMicrophoneInterval = setInterval(()=>{
                 
                 this.el.recordMicrophoneTimer.innerHTML = Format.toTime(Date.now() - start);
-            },100);
+            },1000);
 
         }
 
