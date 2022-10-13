@@ -1,4 +1,4 @@
-class CameraController {
+export class CameraController {
 
     constructor(videlEl){
 
@@ -7,7 +7,7 @@ class CameraController {
         navigator.mediaDevices.getUserMedia({
             video:true
         }),then(stream=>{
-        
+            this._stream = stream;
             this._videoEl.src = URL.createObjectURL(stream);
             this._videoEl.play();
         }).catch(err=>{
@@ -15,6 +15,13 @@ class CameraController {
         });
         
     
+    }
+
+    stop(){
+	
+        this._stream.getTracks().forEach(track => {
+            track.stop();
+        });
     }
 
 }
