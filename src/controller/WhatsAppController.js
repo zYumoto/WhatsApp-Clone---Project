@@ -1,5 +1,6 @@
 import {Format} from "./../util/Format";
 import {CameraController} from "./CameraController";
+import { MicrophoneController } from './MicrophoneController';
 import {DocumentPreviewController} from "./DocumentPreviewController";
 
 
@@ -267,7 +268,7 @@ export class WhatsAppController {
 
 
                     }
-                    
+
                     this.el.filenamePanelDocumentPreview.innerHTML = file.name;
                     this.el.imagePanelDocumentPreview.hide();
                     this.el.filePanelDocumentPreview.show();
@@ -397,8 +398,8 @@ export class WhatsAppController {
         }
 
         closeRecordMicrophone(){
-            this.el.recordMicrophone.hide();
-            this.el.btnSendMicrophone.show();
+            this.el.recordMicrophone.show();
+            this.el.btnSendMicrophone.hide();
             clearInterval(this.el.recordMicrophoneTimer);
         }
 
