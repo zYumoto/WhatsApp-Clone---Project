@@ -2,6 +2,8 @@ import {Format} from "./../util/Format";
 import {CameraController} from "./CameraController";
 import {MicrophoneController} from "./MicrophoneController";
 import {DocumentPreviewController} from "./DocumentPreviewController";
+import { Firebase } from "./../util/Firebase";
+import {User} from "../model/User";
 
 
 export class WhatsAppController {
