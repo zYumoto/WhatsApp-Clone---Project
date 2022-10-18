@@ -1,57 +1,234 @@
 import { Firebase } from "../util/Firebase";
 import { Model } from "./Model";
 import { Format } from "../util/Format";
-
+import { Upload } from "../util/Upload";
 
 export class Message extends Model {
+  constructor() {
+    super();
+  }
 
+  get id() {
+    return this._data.id;
+  }
+  set id(value) {
+    return (this._data.id = value);
+  }
 
-    constructor() {
-        super();
+  get content() {
+    return this._data.content;
+  }
+  set content(value) {
+    return (this._data.content = value);
+  }
 
+  get type() {
+    return this._data.type;
+  }
+  set type(value) {
+    return (this._data.type = value);
+  }
 
-    }
+  get timeStamp() {
+    return this._data.timeStamp;
+  }
+  set timeStamp(value) {
+    return (this._data.timeStamp = value);
+  }
 
-    get id() { return this._data.id; }
-    set id(value) { return this._data.id = value; }
+  get status() {
+    return this._data.status;
+  }
+  set status(value) {
+    return (this._data.status = value);
+  }
 
-    get content() { return this._data.content; }
-    set content(value) { return this._data.content = value; }
+  get preview() {
+    return this._data.preview;
+  }
+  set preview(value) {
+    return (this._data.preview = value);
+  }
 
-    get type() { return this._data.type; }
-    set type(value) { return this._data.type = value; }
+  get info() {
+    return this._data.info;
+  }
+  set info(value) {
+    return (this._data.info = value);
+  }
 
-    get timeStamp() { return this._data.timeStamp; }
-    set timeStamp(value) { return this._data.timeStamp = value; }
+  get fileType() {
+    return this._data.fileType;
+  }
+  set fileType(value) {
+    return (this._data.fileType = value);
+  }
 
-    get status() { return this._data.status; }
-    set status(value) { return this._data.status = value; }
+  get filename() {
+    return this._data.filename;
+  }
+  set filename(value) {
+    return (this._data.filename = value);
+  }
 
-    static send(chatId, from, type, content) {
-        return Message.getRef(chatId).add({
-            content,
-            timeStamp: new Date,
-            status: 'wait',
-            type,
-            from,
+  get size() {
+    return this._data.size;
+  }
+  set size(value) {
+    return (this._data.size = value);
+  }
+
+  get from() {
+    return this._data.from;
+  }
+  set from(value) {
+    return (this._data.from = value);
+  }
+
+  get photo() {
+    return this._data.photo;
+  }
+  set photo(value) {
+    return (this._data.photo = value);
+  }
+
+  get duration() {
+    return this._data.duration;
+  }
+  set duration(value) {
+    return (this._data.duration = value);
+  }
+
+  static upload(file, from) {
+    return Upload.send(file, from);
+  }
+
+  static async sendAudio(chatId, from, file, metadata, photo) {
+    const msgRef = await Message.send(chatId, from, "audio", "");
+    Message.upload(file, from).then((snapshot) => {
+      snapshot.ref.getDownloadURL().then((downloadURL) => {
+        msgRef.set(
+          {
+            content: downloadURL,
+            size: file.size,
+            fileType: file.type,
+            status: "send",
+            photo,
+            duration: metadata.duration,
+          },
+          {
+            merge: true,
+          }
+        );
+      });
+    });
+  }
+
+  static getRef(chatId) {
+    return Firebase.db().collection("chats").doc(chatId).collection("messages");
+  }
+
+  static sendImage(chatId, from, file) {
+    return new Promise((s, f) => {
+      Message.upload(file, from).then((snapshot) => {
+        snapshot.ref.getDownloadURL().then((url) => {
+          Message.send(chatId, from, "image", url)
+            .then(() => {
+              s();
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         });
-    };
+      });
+    });
+  } // sendimage
 
-    static getRef(chatId) {
-        return Firebase.db().collection('chats').doc(chatId).collection('messages')
+  static send(chatId, from, type, content) {
+    return new Promise((s, f) => {
+      Message.getRef(chatId)
+        .add({
+          content,
+          timeStamp: new Date(),
+          status: "wait",
+          type,
+          from,
+        })
+        .then((result) => {
+          let docRef = result.parent.doc(result.id);
 
-    }
+          docRef
+            .set(
+              {
+                status: "send",
+              },
+              {
+                merge: true,
+              }
+            )
+            .then(() => {
+              s(docRef);
+            });
+        });
+    });
+  }
 
+  static sendContact(chatId, from, contact) {
+    return Message.send(chatId, from, "contact", contact);
+  }
 
-    // Metodo para verificar se a as msg
-    getViewElement(me = true) {
+  static sendDocument(chatId, from, file, filePreview, info) {
+    Message.send(chatId, from, "document", "")
+      .then((msgRef) => {
+        Message.upload(file, from).then((snapshot) => {
+          snapshot.ref.getDownloadURL().then((url) => {
+            if (filePreview) {
+              Message.upload(filePreview, from).then((snapshot2) => {
+                snapshot2.ref.getDownloadURL().then((urlPreview) => {
+                  msgRef.set(
+                    {
+                      content: url,
+                      preview: urlPreview,
+                      filename: file.name,
+                      size: file.size,
+                      fileType: file.type,
+                      status: "sent",
+                      info: info,
+                    },
+                    {
+                      merge: true,
+                    }
+                  );
+                });
+              });
+            } else {
+              msgRef.set(
+                {
+                  content: url,
+                  filename: file.name,
+                  size: file.size,
+                  fileType: file.type,
+                  status: "sent",
+                },
+                {
+                  merge: true,
+                }
+              );
+            }
+          });
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } //fechamento
 
-        // criando um elemento div no html
-        let div = document.createElement('div');
+  getViewElement(me = true) {
+    let div = document.createElement("div");
+    div.className = "message";
+    div.id = `_${this.id}`; // duplicando imagem resolvendo aqui nesse codigo
 
-        div.className = 'message';
-
-        switch (this.type) {
+    switch (this.type) {
 
 
             case 'contact':
