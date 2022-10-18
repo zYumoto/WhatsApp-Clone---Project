@@ -1,95 +1,81 @@
 import { Firebase } from "../util/Firebase";
 import { Model } from "./Model";
 
-
 export class Chat extends Model {
+  constructor() {
+    super();
+  }
 
-    constructor() {
+  get users() {
+    this._data.users;
+  }
+  set users(value) {
+    this._data.users = value;
+  }
 
-        super();
-    }
+  get timeStamp() {
+    this._data.timeStamp;
+  }
+  set timeStamp(value) {
+    this._data.timeStamp = value;
+  }
 
-    get users() { this._data.users }
-    set users(value) { this._data.users = value }
+  static getRef() {
+    return Firebase.db().collection("/chats");
+  }
 
-    get timeStamp() { this._data.timeStamp }
-    set timeStamp(value) { this._data.timeStamp = value }
+  static find(meEmail, contactEmail) {
+    return Chat.getRef()
+      .where(btoa(meEmail), "==", true)
+      .where(btoa(contactEmail), "==", true)
+      .get();
+  }
 
+  static create(meEmail, contactEmail) {
+    return new Promise((s, f) => {
+      let users = {};
+      users[btoa(meEmail)] = true;
+      users[btoa(contactEmail)] = true;
 
-    static getRef() {
-
-        return Firebase.db().collection('/chats');
-    };
-
-
-    static create(meEmail, contactEmail) {
-
-        let users = {};
-
-        users[btoa(meEmail)] = true;
-        users[btoa(contactEmail)] = true;
-
-        return new Promise((s, f) => {
-
-            Chat.getRef().add({
-                users,
-                timeStamp: new Date()
-            }).then(doc => {
-
-                Chat.getRef().doc(doc.id).get().then(chat => {
-
-                    s(chat);
-
-                }).catch(err => {
-
-                    f(err)
-
-                })
-            }).catch(err => {
-                f(err);
+      Chat.getRef()
+        .add({
+          users,
+          timeStamp: new Date(),
+        })
+        .then((doc) => {
+          Chat.getRef()
+            .doc(doc.id)
+            .get()
+            .then((chat) => {
+              s(chat);
+            })
+            .catch((err) => {
+              f(err);
             });
-
+        })
+        .catch((err) => {
+          f(err);
         });
+    });
+  }
 
-    }
-
-    static find(meEmail, contactEmail) {
-
-        return Chat.getRef()
-            .where(btoa(meEmail), '==', true)
-            .where(btoa(contactEmail), '==', true).get();
-    };
-
-
-    // 
-    static createIfNotExists(meEmail, contactEmail) {
-
-        return new Promise((s, f) => {
-
-            Chat.find(meEmail, contactEmail).then(chats => {
-
-                if (chats.empty) {
-
-                    Chat.create(meEmail, contactEmail).then(chat => {
-
-
-                        s(chat);
-
-                    });
-
-                } else {
-
-                    chats.forEach(chat => {
-
-                        s(chat);
-
-                    });
-                };
-            }).catch(err => {
-                f(err)
-
+  static createIfNotExists(meEmail, contactEmail) {
+    return new Promise((s, f) => {
+      Chat.find(meEmail, contactEmail)
+        .then((chats) => {
+          if (chats.empty) {
+            Chat.create(meEmail, contactEmail).then((chat) => {
+              s(chat);
             });
+          } else {
+            chats.forEach((chat) => {
+              s(chat);
+            });
+          }
+        })
+        .catch((err) => {
+          f(err);
         });
-    };
-
-};
+    });
+  }
+}

@@ -157,6 +157,10 @@ export class WhatsAppController {
 
         setActiveChat(contact) {
 
+            if (this._contactActive) {
+                Message.getRef(this._contactActive.chatId).onSnapshot(() => { });
+            }
+
         this._contactActive = contact;
 
         this.el.activeName.innerHTML = contact.name;
@@ -170,7 +174,33 @@ export class WhatsAppController {
         this.el.home.hide()
         this.el.main.css({
             display: 'flex'
-        })
+        });
+
+        Message.getRef(this._contactActive.chatId).orderBy('timeStamp').onSnapshot(docs => {
+
+            this.el.panelMessagesContainer.innerHTML = '';
+
+            docs.forEach(doc => {
+                let data = doc.data();
+                data.id = doc.id;
+
+                if (!this.el.panelMessagesContainer.querySelector('#_' + data.id)) {
+
+                    let message = new Message();
+
+                    message.fromJSON(data);
+
+                    let me = (data.from === this._user.email);
+
+                    let view = message.getViewElement(me);
+
+                    this.el.panelMessagesContainer.appendChild(view)
+                }
+            });
+
+        });
+
+        
 
     }
 
@@ -483,26 +513,70 @@ export class WhatsAppController {
             }
         });
 
-        this.el.btnClosePanelDocumentPreview.on("click",e=>{
+        // Evento ao clickar no x fechar panelDocuments
+        this.el.btnClosePanelDocumentPreview.on('click', e => {
+
             this.closeAllMainPanel();
             this.el.panelMessagesContainer.show();
+
         });
 
-        this.el.btnSendDocument.on("click",e=>{
-            console.log("send document");
+        // evento ao clickar no botao de enviar documento
+        this.el.btnSendDocument.on('click', e => {
+
+            let file = this.el.inputDocument.files[0];
+            let base64 = this.el.imgPanelDocumentPreview.src;
+
+            if (file.type === 'application/pdf') {
+
+                Base64.toFile(base64).then(filePreview => {
+                    Message.sendDocument(
+                        this._contactActive.chatId,
+                        this._user.email,
+                        file,
+                        filePreview,
+                        this.el.infoPanelDocumentPreview.innerHTML
+                    );
+                });
+            } else {
+                Message.sendDocument(this._contactActive.chatId,
+                    this._user.email,
+                    file);
+            }
+
+            this.el.btnClosePanelDocumentPreview.click();
         });
 
 
-        this.el.btnAttachContact.on("click", e=>{
-            this.el.modalContacts.show();
+
+        // click no icon de contatos
+        this.el.btnAttachContact.on('click', e => {
+
+            // exibir modal de contatos
+            this._contactsController = new ContactsController(this.el.modalContacts, this._user);
+
+            this._contactsController.on('select', contact => {
+
+                Message.sendContact(
+                    this._contactActive.chatId,
+                    this._user.email,
+                    contact
+                );
+
+            });
+
+            this._contactsController.open();
+
         });
 
-        this.el.btnCloseModalContacts.on("click",e=>{
-            this.el.modalContacts.hide();
+        // Evento ao clicakr no X fechar modal de contatos
+        this.el.btnCloseModalContacts.on('click', e => {
+            this._contactsController.close();
+
         });
 
-         // Evento ao clicka no microfone
-         this.el.btnSendMicrophone.on('click', e => {
+        // Evento ao clicka no microfone
+        this.el.btnSendMicrophone.on('click', e => {
 
             // Abrindo microphone e tirando o icon do microphone
             this.el.recordMicrophone.show();
@@ -512,12 +586,6 @@ export class WhatsAppController {
             this._microphoneController = new MicrophoneController()
 
             // metodo para inicia a gravacação
-            this._microphoneController.on('ready', audio => {
-                console.log('redy events')
-                // iniciando a gravação
-                this._microphoneController.startRecorder();
-            });
-
             this._microphoneController.on('ready', audio => {
                 console.log('redy events')
                 // iniciando a gravação
@@ -557,26 +625,20 @@ export class WhatsAppController {
         });
 
 
+        // Eventos de textos
 
 
+        // Evento de texto mensagem
+        this.el.inputText.on('keyup', e => {
 
-
-
-        this.el.inputText.on("keypress", e=>{
-            if(e.key === "Enter" && !e.ctrlKey){
-                e.preventDefault();
-                        this.el.btnSend.click();
-            }
-        });
-
-        this.el.inputText.on("keyup", e=>{
-
-            if(this.el.inputText.innerHTML.length){
+            // if para verificar se tem alguma coisa escrita se tiver aprece botao de envia msg
+            // alterado no curso esta diferente
+            if (this.el.inputText.innerHTML && this.el.inputText.innerHTML != '<br>')
+            /*if (this.el.inputText.innerHTML.length)*/ {
                 this.el.inputPlaceholder.hide();
                 this.el.btnSendMicrophone.hide();
                 this.el.btnSend.show();
-            }
-            else{
+            } else {
                 this.el.inputPlaceholder.show();
                 this.el.btnSendMicrophone.show();
                 this.el.btnSend.hide();
@@ -584,24 +646,31 @@ export class WhatsAppController {
 
         });
 
-                this.el.btnSend.on("click", e=>{
-                    this._contactActive;
+        // Evento  de aperta enter ou ctrl ENTER
+        this.el.inputText.on('keypress', e => {
 
-                Message.send(
-                    this._contactActive.chatId,
-                    this._user.email,
-                    'text',
-                    this.el.inputText.innerHTML
+            if (e.key === 'Enter' && !e.ctrlKey) {
+                e.preventDefault();
+                this.el.btnSend.click();
+            }
 
-                );
+        });
 
+        // evento ao clickar para enviar a mensagem
+        this.el.btnSend.on('click', e => {
+            Message.send(
+                this._contactActive.chatId,
+                this._user.email,
+                'text',
+                this.el.inputText.innerHTML
+            );
 
-                this.el.inputText.innerHTML = '';
-                this.el.panelEmojis.removeClass('open');
+            this.el.inputText.innerHTML = '';
+            this.el.panelEmojis.removeClass('open');
 
-                    console.log(this.el.inputText.innerHTML);
-                    
-                });
+            // console.log("reslovido", this.el.inputText.innerHTML)
+
+        })
 
 
                 this.el.btnEmojis.on("click", e=>{
@@ -653,32 +722,34 @@ export class WhatsAppController {
 
 
 
-        closeRecordMicrophone(){
-            this.el.recordMicrophone.show();
-            this.el.btnSendMicrophone.hide();
-            clearInterval(this.el.recordMicrophoneTimer);
-        }
-
-        closeAllMainPanel(){
-            this.el.panelMessagesContainer.hide();  
-            this.el.panelDocumentPreview.removeClass("open");
-            this.el.panelCamera.removeClass("open");
-        }
+        // Metodo de fechar o recordMIcrophone e aparece o microphone
+    closeRecordMicrophone() {
+        this.el.recordMicrophone.hide();
+        this.el.btnSendMicrophone.show();
+    };
 
 
-    closeMenuAttach(e){
-        document.removeEventListener("click",this.closeMenuAttach);
-        console.log(this); 
-        this.el.menuAttach.removeClass("open");
-        console.log("remove menu");
-    }
-
-
-
-
-        closeAllLeftPanel(){
-            this.el.panelAddContact.hide();
-            this.el.panelEditProfile.hide();
-        }
+    // metodo para ocultar tudo no panel
+    closeAllMainPanel() {
+        this.el.panelMessagesContainer.hide();
+        this.el.panelDocumentPreview.removeClass('open');
+        this.el.panelCamera.removeClass('open');
 
     }
+
+    // Metodo para quando houver click em outro lugar
+    closeMenuAttach(e) {
+
+        document.removeEventListener('click', this.closeMenuAttach)
+        this.el.menuAttach.removeClass('open');
+        // console.log('remove menu')
+    }
+
+    // METODO fechar todos painel do lado esquerdo
+    closeAllLeftPanel() {
+
+        this.el.panelAddContact.hide();
+        this.el.panelEditProfile.hide();
+
+    }
+}
