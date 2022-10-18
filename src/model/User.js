@@ -30,7 +30,7 @@ export class User extends Model {
 
         return new Promise((s, f) => {
 
-            User.findByEmail(id).onSnapshot(doc => {
+            User.findByEmail(id).get().then(doc => {
 
                 this.fromJSON(doc.data());
 
@@ -66,12 +66,11 @@ export class User extends Model {
         return User.getRef().doc(email);
     }
 
-
     addContact(contact) {
 
-        return User.getRef().doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
-
-
+        return User.getContactsRef(this.email)
+            .doc(btoa(contact.email))
+            .set(contact.toJSON());
     }
 
     getContacts(filter = '') {

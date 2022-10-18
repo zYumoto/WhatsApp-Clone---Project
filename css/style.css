@@ -16143,7 +16143,6 @@ html[dir=rtl] ._2ICcy:after{
 
 
 #picture-camera {
-    height: 100%;
-    width: auto;
-    text-align: center;
+    width: 50%;
+    padding-top: 10px;
 }
