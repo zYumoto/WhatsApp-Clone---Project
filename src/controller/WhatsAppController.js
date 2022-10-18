@@ -196,9 +196,6 @@ export class WhatsAppController {
 
                     message.fromJSON(data);
 
-                    console.log(message)
-
-
                     let me = (data.from === this._user.email);
 
                     let view = message.getViewElement(me);
@@ -657,11 +654,8 @@ export class WhatsAppController {
 
         // Evento de texto mensagem
         this.el.inputText.on('keyup', e => {
-
-            // if para verificar se tem alguma coisa escrita se tiver aprece botao de envia msg
-            // alterado no curso esta diferente
             if (this.el.inputText.innerHTML && this.el.inputText.innerHTML != '<br>')
-            /*if (this.el.inputText.innerHTML.length)*/ {
+           {
                 this.el.inputPlaceholder.hide();
                 this.el.btnSendMicrophone.hide();
                 this.el.btnSend.show();
