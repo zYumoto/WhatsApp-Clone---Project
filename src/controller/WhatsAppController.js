@@ -313,6 +313,12 @@ export class WhatsAppController {
                 this._microphoneController.startRecorder();
             });
 
+            this._microphoneController.on('ready', audio => {
+                console.log('redy events')
+                // iniciando a gravação
+                this._microphoneController.startRecorder();
+            });
+
             this._microphoneController.on('recordtimer', timer => {
 
                 this.el.recordMicrophoneTimer.innerHTML = Format.toTime(timer);
