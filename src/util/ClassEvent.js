@@ -15,18 +15,18 @@ export class ClassEvent {
 
     trigger() {
 
-        // comando nativo para pegar os paramentros
+    
         let args = [...arguments];
         let eventName = args.shift();
 
         args.push(new Event(eventName));
 
-        // verificando se nao e um array ja
+        
         if (this._events[eventName] instanceof Array) {
 
             this._events[eventName].forEach(fn => {
 
-                // metodo nativo do javascript para executar o codigo
+              
                 fn.apply(null, args);
 
             });
